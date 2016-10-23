@@ -1,7 +1,6 @@
 package ua.itea.concurrency;
 
 import java.util.concurrent.*;
-import static java.lang.Math.*;
 
 public class Hairdresser extends Thread {
     private CountDownLatch latch = new CountDownLatch(100);
@@ -30,11 +29,10 @@ public class Hairdresser extends Thread {
 		    queue.put(c);
 		    if (isWaiting)
 			pauseDresser(false, c);
-		    Thread.sleep((long) (random() * 10 + 8));
+		    Thread.sleep((long) (Math.random() * 10 + 8));
 		} catch (InterruptedException e) {
 		    e.printStackTrace();
 		}
-
 	    }
 	});
 	in.setDaemon(true);
@@ -68,7 +66,7 @@ public class Hairdresser extends Thread {
 
     public void dress(Customer c) {
 	try {
-	    Thread.sleep((long) (random() * 10 + 10));
+	    Thread.sleep((long) (Math.random() * 10 + 10));
 	} catch (InterruptedException e) {
 	    e.printStackTrace();
 	}
