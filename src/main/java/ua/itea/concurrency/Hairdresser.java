@@ -4,19 +4,15 @@ import java.util.concurrent.*;
 import static java.lang.Math.*;
 
 public class Hairdresser extends Thread {
-    private static CountDownLatch latch = new CountDownLatch(100);
+    private CountDownLatch latch = new CountDownLatch(100);
+    private BlockingQueue<Customer> queue = new ArrayBlockingQueue<>(10);
     private volatile boolean isWaiting;
-    private volatile BlockingQueue<Customer> queue;
-
-    public Hairdresser() {
-	queue = new ArrayBlockingQueue<>(10);
-    }
 
     public static void main(String[] args) {
 	Hairdresser hairdresser = new Hairdresser();
 	hairdresser.start();
 	try {
-	    latch.await();
+	    hairdresser.latch.await();
 	} catch (InterruptedException e) {
 	    e.printStackTrace();
 	}
@@ -34,7 +30,7 @@ public class Hairdresser extends Thread {
 		    queue.put(c);
 		    if (isWaiting)
 			pauseDresser(false, c);
-		    Thread.sleep((long) (random() * 11 + 5));
+		    Thread.sleep((long) (random() * 10 + 8));
 		} catch (InterruptedException e) {
 		    e.printStackTrace();
 		}
@@ -72,7 +68,7 @@ public class Hairdresser extends Thread {
 
     public void dress(Customer c) {
 	try {
-	    Thread.sleep((long) (random() * 11 + 10));
+	    Thread.sleep((long) (random() * 10 + 10));
 	} catch (InterruptedException e) {
 	    e.printStackTrace();
 	}
