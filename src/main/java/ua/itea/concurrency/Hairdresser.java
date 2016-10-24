@@ -18,26 +18,7 @@ public class Hairdresser extends Thread {
     }
 
     public void run() {
-	Thread in = new Thread(() -> {
-	    int id = 0;
-	    while (latch.getCount() > 0) {
-		if (queue.size() == 10)
-		    System.out.println("Customer_" + ++id + " went to other hairdresser.");
-		try {
-		    Customer c = new Customer(++id);
-		    c.start();
-		    queue.put(c);
-		    if (isWaiting)
-			pauseDresser(false, c);
-		    Thread.sleep((long) (Math.random() * 10 + 8));
-		} catch (InterruptedException e) {
-		    e.printStackTrace();
-		}
-	    }
-	});
-	in.setDaemon(true);
-	in.start();
-
+	begin();
 	while (latch.getCount() > 0) {
 	    if (queue.isEmpty())
 		pauseDresser(true, null);
@@ -47,6 +28,32 @@ public class Hairdresser extends Thread {
 		e.printStackTrace();
 	    }
 	}
+    }
+    
+    public void begin() {
+	Thread input = new Thread(() -> {
+	    int id = 0;
+	    while (latch.getCount() > 0) {
+		if (queue.size() == 10) {
+		    System.out.println("Customer_" + ++id + " went to other hairdresser.");
+		} else {
+		    Customer c = new Customer(++id);
+		    try {
+			queue.put(c);
+		    } catch (Exception e) {
+			e.printStackTrace();
+		    }
+		    if (isWaiting)
+			pauseDresser(false, c);
+		}
+		try {
+		    Thread.sleep((long) (Math.random() * 10 + 8));
+		} catch (InterruptedException e) {
+		    e.printStackTrace();
+		}
+	    }
+	});
+	input.start();
     }
 
     public synchronized void pauseDresser(boolean mark, Customer c) {
@@ -70,33 +77,15 @@ public class Hairdresser extends Thread {
 	} catch (InterruptedException e) {
 	    e.printStackTrace();
 	}
-	c.awake(true);
 	System.out.println("Customer_" + c.id + " was dressed.");
 	latch.countDown();
     }
 
-    private class Customer extends Thread {
-	int id;
+    private class Customer {
+	private int id;
 
 	public Customer(int customerID) {
 	    id = customerID;
 	}
-
-	public void run() {
-	    awake(false);
-	}
-
-	public synchronized void awake(boolean mark) {
-	    if (!mark) {
-		try {
-		    wait();
-		} catch (InterruptedException e) {
-		    e.printStackTrace();
-		}
-	    } else {
-		notify();
-	    }
-	}
     }
-
 }
