@@ -6,11 +6,11 @@ import java.util.concurrent.*;
 import java.util.stream.*;
 
 public class TestCache {
-	private static final TestCache test = new TestCache();
+	private static final TestCache singleton = new TestCache();
 	private static final List<Map<String, String>> CACHE = new ArrayList<>();
 	private static volatile LocalDateTime time;
 	
-	public synchronized static Cache getCache(boolean isCache) {
+	public synchronized static Cache getCache(boolean isInnerClass) {
 		if (time == null || CACHE.isEmpty() || Duration.between(time, LocalDateTime.now()).toMillis() > 100) {
 			if (!CACHE.isEmpty()) CACHE.clear();
 			IntStream.range(1, 12).forEach(i -> {
@@ -20,15 +20,15 @@ public class TestCache {
 			});
 			time = LocalDateTime.now();
 		}
-		return isCache ? new Cache() : null;
+		return isInnerClass ? new Cache() : null;
 	}
 	
-	// First tested approach - 'Singleton'
-	public synchronized String getStatic(int i) {
+	// Tested approach - 'Singleton'
+	public synchronized String get(int i) {
 		return CACHE.get(i).keySet().stream().reduce("--Select--", (a, b) -> a + "|" + b);
 	}
 	
-	// Second tested approach - 'InnerClass'
+	// Tested approach - 'InnerClass'
 	public static class Cache {
 		private List<Map<String, String>> cache;
 		
@@ -48,7 +48,7 @@ public class TestCache {
 		doTest(rand % 2 == 1);
 	}
 	
-	public static boolean doTest(boolean isCache) {
+	public static boolean doTest(boolean isInnerClass) {
 		boolean[] commonSuccess = {true};
 		List<Long> time = new ArrayList<>();
 		int iterations = 100;
@@ -58,13 +58,13 @@ public class TestCache {
 			boolean[] isSuccess = {true};
 			CountDownLatch latch = new CountDownLatch(iterations);
 			IntStream.range(0, iterations).forEach(j -> pool.execute(() -> {
-				Cache cache = getCache(isCache);
+				Cache innerClass = getCache(isInnerClass);
 				try {
 					Thread.sleep(105);
-					if (isCache) {
-						cache.get((int) (Math.random() * 10));
+					if (isInnerClass) {
+						innerClass.get((int) (Math.random() * 10));
 					} else {
-						test.getStatic((int) (Math.random() * 10));
+						singleton.get((int) (Math.random() * 10));
 					}
 				} catch (Exception e) {
 					commonSuccess[0] = false;
@@ -80,14 +80,14 @@ public class TestCache {
 				e.printStackTrace();
 			}
 			if (i > 0) {
-				String mark = (isCache ? "InnerClassTest_" : "SingletonTest_") + i + " -> ";
+				String mark = (isInnerClass ? "InnerClassTest_" : "SingletonTest_") + i + " -> ";
 				time.add(System.currentTimeMillis() - start);
-				(isSuccess[0] ? System.out : System.err).println(mark + "isSuccess = " + isSuccess[0] + ";  Time: " + time.get(time.size() - 1));
+				(isSuccess[0] ? System.out : System.err).println(mark + (isSuccess[0] ? "Success" : "Failed") + ";  Time: " + time.get(time.size() - 1));
 			}
 		});
 		pool.shutdown();
 		double avgTime = time.stream().mapToLong(Long::valueOf).summaryStatistics().getAverage();
-		(commonSuccess[0] ? System.out : System.err).println((isCache ? "INNER_CLASS -> " : "SINGLETON -> ") + (commonSuccess[0] ? "SUCCESS" : "FAILED") + ";  AvgTime = " + avgTime);
+		(commonSuccess[0] ? System.out : System.err).println((isInnerClass ? "INNER_CLASS:  " : "SINGLETON:  ") + (commonSuccess[0] ? "SUCCESS" : "FAILED") + ";  AvgTime = " + avgTime);
 		return commonSuccess[0];
 	}
 
