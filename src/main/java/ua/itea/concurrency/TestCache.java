@@ -43,7 +43,7 @@ public class TestCache {
 
 	// Testing code:
 	public static void main(String[] args) {
-		int rand = (int) (Math.random() * 2); 
+		int rand = (int) (Math.random() * 10); 
 		doTest(rand % 2 == 0);
 		doTest(rand % 2 == 1);
 	}
@@ -51,13 +51,13 @@ public class TestCache {
 	public static boolean doTest(boolean isCache) {
 		boolean[] commonSuccess = {true};
 		List<Long> time = new ArrayList<>();
-		IntStream.range(1, 11).forEach(i -> {
+		int iterations = 100;
+		ExecutorService pool = Executors.newFixedThreadPool(10);
+		IntStream.range(0, 11).forEach(i -> {
 			long start = System.currentTimeMillis();
 			boolean[] isSuccess = {true};
-			int t = 100;
-			CountDownLatch latch = new CountDownLatch(t);
-			ExecutorService pool = Executors.newFixedThreadPool(10);
-			IntStream.range(0, t).forEach(j -> pool.execute(() -> {
+			CountDownLatch latch = new CountDownLatch(iterations);
+			IntStream.range(0, iterations).forEach(j -> pool.execute(() -> {
 				Cache cache = getCache(isCache);
 				try {
 					Thread.sleep(105);
@@ -79,14 +79,15 @@ public class TestCache {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			pool.shutdown();
-			String mark = (isCache ? "InnerClass_" : "Singleton_") + i + " -> ";
-			time.add(System.currentTimeMillis() - start);
-			(isSuccess[0] ? System.out : System.err).println(mark + "isTestSuccess = " + isSuccess[0]);
-			(isSuccess[0] ? System.out : System.err).println(mark + "Execution Time: " + time.get(time.size() - 1));
+			if (i > 0) {
+				String mark = (isCache ? "InnerClassTest_" : "SingletonTest_") + i + " -> ";
+				time.add(System.currentTimeMillis() - start);
+				(isSuccess[0] ? System.out : System.err).println(mark + "isSuccess = " + isSuccess[0] + ";  Time: " + time.get(time.size() - 1));
+			}
 		});
+		pool.shutdown();
 		double avgTime = time.stream().mapToLong(Long::valueOf).summaryStatistics().getAverage();
-		(commonSuccess[0] ? System.out : System.err).println((isCache ? "INNER_CLASS - " : "SINGLETON - ") + (commonSuccess[0] ? "SUCCESS" : "FAILED") + "   AvgTime = " + avgTime);
+		(commonSuccess[0] ? System.out : System.err).println((isCache ? "INNER_CLASS -> " : "SINGLETON -> ") + (commonSuccess[0] ? "SUCCESS" : "FAILED") + ";  AvgTime = " + avgTime);
 		return commonSuccess[0];
 	}
 
