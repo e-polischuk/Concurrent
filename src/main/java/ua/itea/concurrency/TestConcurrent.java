@@ -77,7 +77,7 @@ public class TestConcurrent {
 		}
 
 		static Item of(int sleep, int timeOut) {
-			Item test = Task.getResultOf(() -> new Item(sleep, timeOut), timeOut, TimeUnit.SECONDS, false);
+			Item test = Task.valueOf(() -> new Item(sleep, timeOut), timeOut, TimeUnit.SECONDS, true);
 			return test == null ? new Item(0, timeOut) : test;
 //			try (Task<Item> task = Task.of(() -> new Item(sleep, timeOut))) {
 //				return task.get(timeOut, TimeUnit.SECONDS);
@@ -96,26 +96,20 @@ public class TestConcurrent {
 	}
 	
 	static class Task<V> implements Future<V>, AutoCloseable {
-		private static ExecutorService service;
-		private boolean isInterrapted;
 		private Future<V> future;
+		private boolean isInterrapted;
 		
 		private Task(Future<V> future) {
 			this.future = future;
 		}
 		
-		private static ExecutorService getService() {
-			if (service == null || service.isShutdown()) service = Executors.newCachedThreadPool();
-			return service;
-		}
-		
 		public static <V> Task<V> of(Callable<V> task) {
-			return new Task<V>(getService().submit(task));
+			return new Task<V>(Exe.service().submit(task));
 		}
 		
 		@SafeVarargs
 		public static <V> Task<V> of(Runnable task, V...res) {
-			return new Task<V>(getService().submit(task, res != null && res.length > 0 ? res[0] : null));
+			return new Task<V>(Exe.service().submit(task, res != null && res.length > 0 ? res[0] : null));
 		}
 		
 		public boolean isInterrapted() {
@@ -127,7 +121,7 @@ public class TestConcurrent {
 			return this;
 		}
 		
-		public static <V> V getResultOf(Callable<V> task, boolean...isInterrapted) {
+		public static <V> V valueOf(Callable<V> task, boolean...isInterrapted) {
 			try (Task<V> t = of(task).setInterrapted(isInterrapted != null && isInterrapted.length > 0 && isInterrapted[0])) {
 				return t.get();
 			} catch (Exception e) {
@@ -135,7 +129,7 @@ public class TestConcurrent {
 			}
 		}
 		
-		public static <V> V getResultOf(Callable<V> task, long timeout, TimeUnit unit, boolean...isInterrapted) {
+		public static <V> V valueOf(Callable<V> task, long timeout, TimeUnit unit, boolean...isInterrapted) {
 			try (Task<V> t = of(task).setInterrapted(isInterrapted != null && isInterrapted.length > 0 && isInterrapted[0])) {
 				return t.get(timeout, unit);
 			} catch (Exception e) {
@@ -173,6 +167,17 @@ public class TestConcurrent {
 			return future == null ? null : future.get(timeout, unit);
 		}
 		
+		public static class Exe {
+			private static ExecutorService service;
+			
+			public static ExecutorService service() {
+				if (service == null || service.isShutdown()) service = Executors.newCachedThreadPool();
+				return service;
+			}
+			
+		}
+		
 	}
 
 }
+
