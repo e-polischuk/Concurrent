@@ -3,9 +3,9 @@ package polischuk;
 import java.util.Map;
 
 public enum Setting {
-	STR_PROP ("strProp", "str"),
+	STR_PROP ("strProp", "yes"),
 	NUM_PROP ("intProp", "111"),
-	BOOL_PROP ("boolProp", "yes");
+	BOOL_PROP ("boolProp", "True");
 	
 //	private static final Pattern INT_PAT = Pattern.compile("^-?\\d+$");
 //	private static final List<String> BOOLS = Arrays.asList("true", "false", "yes", "no");
@@ -42,9 +42,9 @@ public enum Setting {
 		if (Test.INT_PAT.matcher(defV).matches()) {
 			val = val.trim();
 			this.value = Integer.parseInt(Test.INT_PAT.matcher(val).matches() ? val : defV);
-		} else if (Test.BOOLS.contains(defV.toLowerCase())) {
+		} else if ("true".equalsIgnoreCase(defV) || "false".equalsIgnoreCase(defV)) {
 			val = val.trim().toLowerCase();
-			this.value = Test.BOOLS.contains(val) ? "true".equals(val) || "yes".equals(val) : "true".equals(defV) || "yes".equals(defV);
+			this.value = "true".equals(val) || "false".equals(val) ? "true".equals(val) : "true".equals(defV);
 		} else {
 			this.value = val.trim().isEmpty() ? this.defVal : val;
 		}
