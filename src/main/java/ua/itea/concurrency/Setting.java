@@ -23,8 +23,20 @@ public enum Setting {
 		this.value = defVal;
 	}
 	
+	public String asStr() {
+		return String.valueOf(value);
+	}
+	
+	public int asInt() {
+		return (int) value;
+	}
+	
+	public boolean asBool() {
+		return (boolean) value;
+	}
+	
 	synchronized static void setValues(Map<String, String> props) {
-		for(Setting s : Setting.values()) {
+		for(Setting s : values()) {
 			String propVal = props == null || props.get(s.name) == null ? "" : props.get(s.name);
 			Class<?> type = s.defVal.getClass();
 			if (type == Integer.class) {
@@ -37,18 +49,6 @@ public enum Setting {
 				s.value = propVal.trim().isEmpty() ? s.defVal : propVal;
 			}
 		}
-	}
-
-	public String asStr() {
-		return String.valueOf(value);
-	}
-	
-	public int asInt() {
-		return (int) value;
-	}
-	
-	public boolean asBool() {
-		return (boolean) value;
 	}
 	
 }
