@@ -4,7 +4,7 @@ import java.util.Map;
 
 public enum Setting {
 	STR_PROP ("strProp", "yes"),
-	NUM_PROP ("intProp", "111"),
+	NUM_PROP ("intProp", -111),
 	BOOL_PROP ("boolProp", "True");
 	
 //	private static final Pattern INT_PAT = Pattern.compile("^-?\\d+$");
@@ -44,7 +44,7 @@ public enum Setting {
 			this.value = Integer.parseInt(Test.INT_PAT.matcher(val).matches() ? val : defV);
 		} else if ("true".equalsIgnoreCase(defV) || "false".equalsIgnoreCase(defV)) {
 			val = val.trim().toLowerCase();
-			this.value = "true".equals(val) || "false".equals(val) ? "true".equals(val) : "true".equals(defV);
+			this.value = Boolean.parseBoolean("true".equals(val) || "false".equals(val) ? val : defV);
 		} else {
 			this.value = val.trim().isEmpty() ? this.defVal : val;
 		}
